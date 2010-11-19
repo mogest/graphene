@@ -8,7 +8,7 @@ module Graphene::Renderable
     end
   end
 
-  def padding=(a, b=nil, c=nil, d=nil)
+  def padding(a, b=nil, c=nil, d=nil)
     @padding_top, @padding_right, @padding_bottom, @padding_left = if d
       [a, b, c, d]
     elsif c

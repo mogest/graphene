@@ -2,14 +2,10 @@ module Graphene
   class Box
     include Renderable
 
-    attr_reader :contents
+    attr_reader :components
 
-    def initialize(*contents)
-      @contents = contents
-    end
-
-    def layout
-      self
+    def initialize(*components)
+      @components = components
     end
 
     def preferred_width
@@ -22,7 +18,7 @@ module Graphene
 
     protected
     def all_preferred_widths
-      @all_preferred_widths ||= contents.collect do |c|
+      @all_preferred_widths ||= components.collect do |c|
         if w = c.preferred_width
           w + c.renderable_object.padding_width
         end
@@ -30,8 +26,9 @@ module Graphene
     end
 
     def all_preferred_heights
-      @all_preferred_heights ||= contents.collect do |c|
+      @all_preferred_heights ||= components.collect do |c|
         if h = c.preferred_height
+          p c.renderable_object.padding_height
           h + c.renderable_object.padding_height
         end
       end
@@ -47,20 +44,20 @@ module Graphene
       array_sum(all_preferred_widths) if all_preferred_widths.all?
     end
 
-    def render(canvas, top, left, width, height)
+    def render(canvas, left, top, width, height)
       fixed_width = array_sum(all_preferred_widths)
       variable_count = all_preferred_widths.inject(0) {|count, w| w ? count : count + 1}
       variable_width = (width - fixed_width) / variable_count if variable_count > 0
 
-      contents.each do |content|
-        content.render(
+      components.each do |component|
+        component.render(
           canvas,
-          top + content.renderable_object.padding_top,
-          left + content.renderable_object.padding_left,
-          content.preferred_width || variable_width - content.renderable_object.padding_width,
-          content.preferred_height || height - content.renderable_object.padding_height)
+          left + component.renderable_object.padding_left,
+          top + component.renderable_object.padding_top,
+          component.preferred_width || variable_width - component.renderable_object.padding_width,
+          component.preferred_height || height - component.renderable_object.padding_height)
 
-        left += (content.preferred_width || variable_width) + content.renderable_object.padding_width
+        left += (component.preferred_width || variable_width) + component.renderable_object.padding_width
       end
     end
   end
@@ -70,34 +67,35 @@ module Graphene
       array_sum(all_preferred_heights) if all_preferred_heights.all?
     end
 
-    def render(canvas, top, left, width, height)
+    def render(canvas, left, top, width, height)
       fixed_height = array_sum(all_preferred_heights)
       variable_count = all_preferred_heights.inject(0) {|count, h| h ? count : count + 1}
       variable_height = (height - fixed_height) / variable_count if variable_count > 0
 
-      contents.each do |content|
-        content.render(
+      components.each do |component|
+        component.render(
           canvas,
-          top + content.renderable_object.padding_top,
-          left + content.renderable_object.padding_left,
-          content.preferred_width || width - content.renderable_object.padding_width,
-          content.preferred_height || variable_height - content.renderable_object.padding_height)
+          left + component.renderable_object.padding_left,
+          top + component.renderable_object.padding_top,
+          component.preferred_width || width - component.renderable_object.padding_width,
+          component.preferred_height || variable_height - component.renderable_object.padding_height)
 
-        top += (content.preferred_height || variable_height) + content.renderable_object.padding_width
+        top += (component.preferred_height || variable_height) + component.renderable_object.padding_height
+        puts top
       end
     end
   end
 
   class Zbox < Box
-    def render(canvas, top, left, width, height)
+    def render(canvas, left, top, width, height)
 
-      contents.each do |content|
-        content.render(
+      components.each do |component|
+        component.render(
           canvas,
-          top + content.renderable_object.padding_top,
-          left + content.renderable_object.padding_left,
-          content.preferred_width || width - content.renderable_object.padding_width,
-          content.preferred_height || height - content.renderable_object.padding_height)
+          left + component.renderable_object.padding_left,
+          top + component.renderable_object.padding_top,
+          component.preferred_width || width - component.renderable_object.padding_width,
+          component.preferred_height || height - component.renderable_object.padding_height)
       end
     end
   end

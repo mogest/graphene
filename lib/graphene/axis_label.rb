@@ -2,19 +2,22 @@ module Graphene
   class AxisLabel
     include Renderable
 
-    attr_accessor :name
+    attr_accessor :name, :font_size
 
     def initialize
+      @font_size = 16
     end
 
-    def layout(default_rotation)
-      Renderer.new(self, @rotation || default_rotation)
+    def layout(position)
+      Renderer.new(self, position)
     end
 
     class Renderer
-      def initialize(label, rotation)
+      include Positioned
+
+      def initialize(label, position)
         @label = label
-        @rotation = rotation
+        @layout_position = position
       end
 
       def renderable_object
@@ -22,16 +25,31 @@ module Graphene
       end
 
       def preferred_width
-        # TODO
+        @label.font_size * (@label.name || "").length / 1.5 if vertical?
       end
 
       def preferred_height
-        # TODO
+        @label.font_size if horizontal?
       end
 
-      def render(canvas, top, left, width, height)
+      def render(canvas, left, top, width, height)
         return unless @label.name
-        canvas.AXIS_LABEL_GOES_HERE(@label.name, @rotation, top, left, width, height)
+
+        case @layout_position
+        when :bottom
+          top += 20
+        when :left, :right
+          top += (height - @label.font_size) / 2
+        end
+
+        opts = {:class => "axis-label", :font_size => @label.font_size}
+        if vertical?
+          opts[:height] = height
+        else
+          opts[:width] = width
+        end
+
+        canvas.text(left, top + @label.font_size, @label.name, opts)
       end
     end
   end

@@ -9,20 +9,23 @@ module Graphene
   end
 end
 
+require 'rubygems'
+
+gem 'builder'
+require 'builder'
+
 require 'graphene/renderable'
+require 'graphene/positioned'
 require 'graphene/boxes'
 
 require 'graphene/axis'
 require 'graphene/axis_label'
-require 'graphene/bar'
 require 'graphene/chart'
 require 'graphene/grid'
-require 'graphene/histogram'
 require 'graphene/legend'
-require 'graphene/line'
-require 'graphene/stacked'
 require 'graphene/text'
 require 'graphene/value_labels'
+require 'graphene/point_mapper'
 
-require 'graphene/debug_canvas'
-require 'graphene/svg_canvas'
+require 'graphene/views'
+require 'graphene/canvases'

@@ -2,7 +2,7 @@ module Graphene
   class ValueLabels
     include Renderable
 
-    attr_accessor :layout_position
+    attr_accessor :layout_position, :formatter
 
     def initialize
     end
@@ -12,6 +12,8 @@ module Graphene
     end
 
     class Renderer
+      include Positioned
+
       def initialize(value_labels, layout_position)
         @value_labels = value_labels
         @layout_position = layout_position
@@ -22,15 +24,15 @@ module Graphene
       end
 
       def preferred_width
-        20 if [:left, :right].include?(@layout_position)
+        20 if horizontal?
       end
 
       def preferred_height
-        20 if [:top, :bottom].include?(@layout_position)
+        20 if vertical?
       end
 
-      def render(canvas, top, left, width, height)
-        canvas.VALUE_LABELS_GO_HERE(@layout_position, top, left, width, height)
+      def render(canvas, left, top, width, height)
+        #canvas.VALUE_LABELS_GO_HERE(@layout_position, top, left, width, height)
       end
     end
   end

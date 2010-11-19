@@ -6,7 +6,8 @@ module Graphene
 
     def initialize
       @text = ""
-      @font_size = 24
+      @font_size = 48
+      @padding_bottom = 16
     end
 
     def layout
@@ -21,8 +22,8 @@ module Graphene
       @font_size
     end
 
-    def render(canvas, top, left, width, height)
-      canvas.text top, left, text, :font_size => @font_size
+    def render(canvas, left, top, width, height)
+      canvas.text left, top + @font_size, text, :font_size => @font_size, :fill_colour => "#000000"
     end
   end
 end

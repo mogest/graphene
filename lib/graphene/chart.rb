@@ -2,13 +2,13 @@ module Graphene
   class Chart
     attr_accessor :x_axis, :y_axis, :grid, :width, :height
     attr_writer :y2_axis, :legend, :heading
-    attr_reader :contents
+    attr_reader :views
 
     def initialize
-      @x_axis = Axis.new(self)
-      @y_axis = Axis.new(self)
+      @x_axis = Axis.new(self, :x)
+      @y_axis = Axis.new(self, :y)
       @grid = Grid.new(self)
-      @contents = []
+      @views = []
       @width = 640
       @height = 480
     end
@@ -22,7 +22,7 @@ module Graphene
     end
 
     def y2_axis
-      @y2_axis ||= Axis.new(self)
+      @y2_axis ||= Axis.new(self, :y2)
     end
 
     def legend
@@ -30,28 +30,29 @@ module Graphene
     end
 
     def plot(dataset, options = {})
-      Line.new(dataset).tap do |line|
+      Views::Line.new(dataset).tap do |line|
         options.each {|k, v| line.send(k, v)}
-        @contents << line
+        @views << line
+        yield line if block_given?
       end
     end
 
     def histogram(dataset, step, options = {})
-      Histogram.new(dataset, step).tap do |histogram|
+      Views::Histogram.new(dataset, step).tap do |histogram|
         options.each {|k, v| histogram.send(k, v)}
-        @contents << histogram
+        @views << histogram
       end
     end
 
     def bar(dataset, options = {})
-      Bar.new(dataset).tap do |bar|
+      Views::Bar.new(dataset).tap do |bar|
         options.each {|k, v| bar.send(k, v)}
-        @contents << bar
+        @views << bar
       end
     end
 
-    def layout
-      if contents.empty?
+    def layout(point_mapper)
+      if views.empty?
         raise LayoutError, "Cannot layout Chart before at least one plot/histogram/bar has been specified"
       end
 
@@ -61,24 +62,36 @@ module Graphene
         [:left, :bottom, :top, :horizontal]
       end
 
-      box = Zbox.new(@grid.layout, @x_axis.layout(x_position), *contents.collect {|c| c.layout(content_position)}).layout
+      elements = [
+        @grid.layout,
+        @x_axis.layout(point_mapper, x_position),
+        @y_axis.layout(point_mapper, y_position)
+      ]
 
-      elements = [@y_axis.layout(y_position), box]
-      elements << @y2_axis.layout(y2_position) if @y2_axis
+      elements << @y2_axis.layout(point_mapper, y2_position) if @y2_axis
 
-      box = Xbox.new(*elements).layout
-      box = Ybox.new(@legend.layout, box).layout if @legend
-      box = Ybox.new(@heading.layout, box).layout if @heading
+      elements.concat(views.collect {|c| c.layout(point_mapper, content_position)})
+
+      box = Zbox.new(*elements)
+
+      box = Ybox.new(box, @x_axis.label.layout(:bottom))
+      box = Xbox.new(@y_axis.label.layout(:left), box)
+
+      box = Ybox.new(@legend.layout, box) if @legend
+      box = Ybox.new(@heading.layout, box) if @heading
       box
     end
 
     def render_with_canvas(canvas)
-      layout.render(canvas, 0, 0, @width, @height)
+      point_mapper = PointMapper.new
+      point_mapper.charts << self
+
+      layout(point_mapper).render(canvas, 0, 0, @width, @height)
       canvas
     end
 
     def to_svg
-      render_with_canvas(SvgCanvas.new(self)).output
+      render_with_canvas(Canvases::Svg.new(self)).output
     end
   end
 end
