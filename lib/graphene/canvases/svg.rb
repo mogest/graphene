@@ -17,6 +17,7 @@ module Graphene
       def line(x1, y1, x2, y2, opts = {})
         @builder.line :x1 => x1, :y1 => y1, :x2 => x2, :y2 => y2,
           :stroke => opts[:stroke_colour],
+          "stroke-width" => opts[:stroke_width] || 1,
           :class => opts[:class], :id => opts[:id]
       end
 
@@ -29,8 +30,9 @@ module Graphene
       def text(x, y, text, opts = {})
         @builder.text text,
           {:x => x, :y => y,
-          :class => opts[:class], :id => opts[:id], :width => opts[:width], :height => opts[:height], "text-anchor" => opts[:text_anchor],
-          "font-size" => opts[:font_size],
+          :class => opts[:class], :id => opts[:id], "text-anchor" => opts[:text_anchor],
+          "font-size" => opts[:font_size] && "#{opts[:font_size]}px",
+          "alignment-baseline" => opts[:alignment_baseline],
           :fill => opts[:fill_colour]
         }.reject {|k, v| v.nil?}
       end
@@ -46,6 +48,22 @@ module Graphene
         when 'O'
           @builder.circle :cx => x, :cy => y, :r => size, :fill => "none", :stroke => "#000000", :stroke_width => 5
         end
+      end
+
+      def path(instructions, opts = {})
+        path = ""
+        instructions.each do |command, *data|
+          case command
+          when :move
+            path << "M#{data[0]} #{data[1]}"
+          when :lineto
+            path << "L#{data[0]} #{data[1]}"
+          else
+            raise ArgumentError, "invalid command #{command}"
+          end
+        end
+
+        @builder.path opts.merge(:d => path)
       end
     end
   end

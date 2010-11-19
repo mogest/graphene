@@ -13,6 +13,7 @@ require 'rubygems'
 
 gem 'builder'
 require 'builder'
+require 'bigdecimal'
 
 require 'graphene/renderable'
 require 'graphene/positioned'

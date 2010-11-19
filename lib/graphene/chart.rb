@@ -63,7 +63,7 @@ module Graphene
       end
 
       elements = [
-        @grid.layout,
+        @grid.layout(false),
         @x_axis.layout(point_mapper, x_position),
         @y_axis.layout(point_mapper, y_position)
       ]
@@ -73,6 +73,9 @@ module Graphene
       elements.concat(views.collect {|c| c.layout(point_mapper, content_position)})
 
       box = Zbox.new(*elements)
+
+      box = Ybox.new(box, @x_axis.value_labels.layout(point_mapper, :bottom)) if @x_axis.value_labels.formatter
+      box = Xbox.new(@y_axis.value_labels.layout(point_mapper, :left), box) if @y_axis.value_labels.formatter
 
       box = Ybox.new(box, @x_axis.label.layout(:bottom))
       box = Xbox.new(@y_axis.label.layout(:left), box)

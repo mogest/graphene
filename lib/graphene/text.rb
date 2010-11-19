@@ -2,12 +2,13 @@ module Graphene
   class Text
     include Renderable
 
-    attr_accessor :text, :font_size
+    attr_accessor :text, :font_size, :text_align
 
     def initialize
       @text = ""
       @font_size = 48
       @padding_bottom = 16
+      @text_align = :center
     end
 
     def layout
@@ -23,7 +24,18 @@ module Graphene
     end
 
     def render(canvas, left, top, width, height)
-      canvas.text left, top + @font_size, text, :font_size => @font_size, :fill_colour => "#000000"
+      opts = {:font_size => @font_size, :fill_colour => "#000000"}
+
+      case @text_align.to_s
+      when 'center'
+        left += width / 2
+        opts[:text_anchor] = "middle"
+      when 'right'
+        left += width
+        opts[:text_anchor] = "end"
+      end
+
+      canvas.text left, top + @font_size, text, opts
     end
   end
 end

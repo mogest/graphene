@@ -7,7 +7,8 @@ module Graphene
       @stroke_colour = "#dddddd"
     end
 
-    def layout
+    def layout(rotated)
+      @rotated = rotated
       self
     end
 
@@ -16,11 +17,32 @@ module Graphene
     def preferred_height; nil; end
 
     def render(canvas, left, top, width, height)
-      canvas.box(left, top, width, 0.5, :class => "grid", :stroke_colour => @stroke_colour)
-      canvas.box(left+25, top, 0.5, height, :class => "grid", :stroke_colour => @stroke_colour)
-      canvas.box(left+50, top, 0.5, height, :class => "grid", :stroke_colour => @stroke_colour)
-      canvas.box(left, top+25, width, 0.5, :class => "grid", :stroke_colour => @stroke_colour)
-      canvas.box(left, top+50, width, 0.5, :class => "grid", :stroke_colour => @stroke_colour)
+      x_ticks = @chart.x_axis.grid_ticks
+      y_ticks = @chart.y_axis.grid_ticks
+
+      instructions = []
+
+      [[:x, x_ticks], [:y, y_ticks]].select {|a,b| b && b > 0}.each do |axis, ticks|
+        if (axis == :x) == !!@rotated
+          dy = height / BigDecimal.new((ticks - 1).to_s)
+          ticks.times do |cy|
+            y = top + cy * dy
+            instructions << [:move, left, y]
+            instructions << [:lineto, left + width, y]
+          end
+        else
+          dx = width / BigDecimal.new((ticks - 1).to_s)
+          ticks.times do |cx|
+            x = left + cx * dx
+            instructions << [:move, x, top]
+            instructions << [:lineto, x, top + height]
+          end
+        end
+      end
+
+      if instructions.any?
+        canvas.path(instructions, :stroke => "#dddddd")
+      end
     end
   end
 end

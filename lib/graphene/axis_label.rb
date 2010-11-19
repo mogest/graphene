@@ -35,18 +35,20 @@ module Graphene
       def render(canvas, left, top, width, height)
         return unless @label.name
 
-        case @layout_position
-        when :bottom
-          top += 20
-        when :left, :right
+        opts = {:class => "axis-label", :font_size => @label.font_size}
+
+        if vertical?
           top += (height - @label.font_size) / 2
+        else
+          left += width / 2
+          opts[:text_anchor] = "middle"
         end
 
-        opts = {:class => "axis-label", :font_size => @label.font_size}
-        if vertical?
-          opts[:height] = height
-        else
-          opts[:width] = width
+        if @layout_position == :left
+          opts[:text_anchor] = "end"
+          # Insert a small bit of padding here so it's not hard up against
+          # the Y axis.
+          left += width - @label.font_size / 2
         end
 
         canvas.text(left, top + @label.font_size, @label.name, opts)

@@ -2,6 +2,8 @@ module Graphene
   class Legend
     include Renderable
 
+    attr_accessor :line_padding, :font_size, :box_colour
+
     def initialize(chart)
       @chart = chart
       @line_padding = 8
@@ -26,8 +28,8 @@ module Graphene
 
       @chart.views.each_with_index do |content, index|
         line_top = top + index * line_height
-        canvas.box left, line_top, @font_size, @font_size, :stroke_colour => @box_colour, :fill_colour => content.fill_colour || content.stroke_colour, :class => "legend"
-        canvas.text left + @font_size * 2, line_top + @font_size, content.name, :font_size => @font_size, :class => "legend"
+        canvas.box left, line_top, @font_size, @font_size * 1.2, :stroke_colour => @box_colour, :fill_colour => content.stroke_colour, :class => "legend"
+        canvas.text left + @font_size * 1.5, line_top + @font_size, content.name, :font_size => @font_size, :class => "legend"
       end
     end
   end
