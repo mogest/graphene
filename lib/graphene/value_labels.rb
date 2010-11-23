@@ -44,37 +44,35 @@ module Graphene
         end
 
         ticks = @value_labels.axis.ticks
-        if ticks && ticks > 1
-          instructions = []
+        return unless ticks && ticks > 1
 
-          if vertical?
-            tick_space = height / BigDecimal.new((ticks - 1).to_s)
-            ticks.times do |tick|
-              y = top + tick * tick_space
+        if vertical?
+          tick_space = height / BigDecimal.new((ticks - 1).to_s)
+          ticks.times do |tick|
+            y = top + tick * tick_space
 
-              value = @point_mapper.y_point_to_value(y - top, height)
-              value = if formatter_proc
-                formatter_proc.call(value)
-              else
-                formatter_string % value
-              end
-
-              canvas.text(left + width - 5, y, value, :text_anchor => "end", :alignment_baseline => "middle")
+            value = @point_mapper.y_point_to_value(y - top, height)
+            value = if formatter_proc
+              formatter_proc.call(value)
+            else
+              formatter_string % value
             end
-          else
-            tick_space = width / BigDecimal.new((ticks - 1).to_s)
-            ticks.times do |tick|
-              x = left + tick * tick_space
 
-              value = @point_mapper.x_point_to_value(x - left, width)
-              value = if formatter_proc
-                formatter_proc.call(value)
-              else
-                formatter_string % value
-              end
+            canvas.text(left + width - 5, y, value, :text_anchor => "end", :alignment_baseline => "middle")
+          end
+        else
+          tick_space = width / BigDecimal.new((ticks - 1).to_s)
+          ticks.times do |tick|
+            x = left + tick * tick_space
 
-              canvas.text(x, top + height, value, :text_anchor => "middle")
+            value = @point_mapper.x_point_to_value(x - left, width)
+            value = if formatter_proc
+              formatter_proc.call(value)
+            else
+              formatter_string % value
             end
+
+            canvas.text(x, top + height, value, :text_anchor => "middle")
           end
         end
       end

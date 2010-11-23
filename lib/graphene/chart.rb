@@ -74,8 +74,17 @@ module Graphene
 
       box = Zbox.new(*elements)
 
-      box = Ybox.new(box, @x_axis.value_labels.layout(point_mapper, :bottom)) if @x_axis.value_labels.formatter
-      box = Xbox.new(@y_axis.value_labels.layout(point_mapper, :left), box) if @y_axis.value_labels.formatter
+      if @x_axis.value_labels.formatter
+        x_value_labels_layout = @x_axis.value_labels.layout(point_mapper, :bottom)
+      end
+
+      if @y_axis.value_labels.formatter
+        y_value_labels_layout = @y_axis.value_labels.layout(point_mapper, :left)
+      end
+
+      box = GridBox.new(
+          [y_value_labels_layout, box                  ],
+          [nil,                   x_value_labels_layout])
 
       box = Ybox.new(box, @x_axis.label.layout(:bottom))
       box = Xbox.new(@y_axis.label.layout(:left), box)
