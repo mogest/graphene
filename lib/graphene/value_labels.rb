@@ -2,11 +2,12 @@ module Graphene
   class ValueLabels
     include Renderable
 
-    attr_accessor :layout_position, :formatter
+    attr_accessor :layout_position, :formatter, :font_size
     attr_reader :axis
 
     def initialize(axis)
       @axis = axis
+      @font_size = 14
     end
 
     def layout(point_mapper, position)
@@ -31,7 +32,7 @@ module Graphene
       end
 
       def preferred_height
-        20 if horizontal?
+        @value_labels.font_size * 1.5 if horizontal?
       end
 
       def render(canvas, left, top, width, height)
@@ -58,7 +59,10 @@ module Graphene
               formatter_string % value
             end
 
-            canvas.text(left + width - 5, y, value, :text_anchor => "end", :alignment_baseline => "middle")
+            anchor = @layout_position == :left ? "end" : nil
+            left_offset = anchor == "end" ? width - 5 : 0
+
+            canvas.text(left + left_offset, y, value, :text_anchor => anchor, :alignment_baseline => "middle", :font_size => @value_labels.font_size)
           end
         else
           tick_space = width / BigDecimal.new((ticks - 1).to_s)
@@ -72,7 +76,9 @@ module Graphene
               formatter_string % value
             end
 
-            canvas.text(x, top + height, value, :text_anchor => "middle")
+            top_offset = true ? @value_labels.font_size : 0
+
+            canvas.text(x, top + top_offset, value, :text_anchor => "middle", :font_size => @value_labels.font_size)
           end
         end
       end
