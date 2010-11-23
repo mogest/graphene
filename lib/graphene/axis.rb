@@ -2,20 +2,25 @@ module Graphene
   class Axis
     include Renderable
 
-    attr_accessor :min, :max, :ticks, :layout_position, :line_thickness, :at_value
+    attr_accessor :min, :max, :line_thickness
+    attr_accessor :ticks, :tick_colour, :tick_opacity, :tick_thickness
     attr_writer :label, :value_labels, :grid_ticks
     attr_reader :chart, :type
 
     def initialize(chart, type)
       @chart = chart
       @value_labels = ValueLabels.new(self)
+
+      @tick_colour = "#000099"
+      @tick_opacity = 1
+      @tick_thickness = 1
+
       @line_thickness = 2
       @type = type
-      @at_value = 0 if type == :x
     end
 
     def label
-      @axis_label ||= AxisLabel.new
+      @axis_label ||= AxisLabel.new(self)
     end
 
     def name=(value)
@@ -61,17 +66,17 @@ module Graphene
       watermark
     end
 
-    def layout(point_mapper, default_position)
-      Renderer.new(self, point_mapper, @layout_position || default_position)
+    def layout(point_mapper)
+      Renderer.new(self, point_mapper)
     end
 
     class Renderer
       include Positioned
 
-      def initialize(axis, point_mapper, layout_position)
+      def initialize(axis, point_mapper)
         @axis = axis
         @point_mapper = point_mapper
-        @layout_position = layout_position
+        @layout_position = point_mapper.send("#{axis.type}_axis_position")
       end
 
       def renderable_object
@@ -82,10 +87,10 @@ module Graphene
       def preferred_height; nil; end
 
       def render(canvas, left, top, width, height)
-        offset = if @axis.at_value
-          @point_mapper.y_value_to_point(@axis.at_value, height)
-        else
-          0
+        offset = case @layout_position
+        when :bottom then height
+        when :right then width
+        else 0
         end
 
         ticks = @axis.ticks
@@ -109,13 +114,14 @@ module Graphene
             end
           end
 
-          canvas.path(instructions, :stroke => "#000099")
+          canvas.path(instructions, :stroke => @axis.tick_colour, "stroke-opacity" => @axis.tick_opacity, "stroke-width" => @axis.tick_thickness, :class => "ticks")
         end
 
+        opts = {:stroke_colour => "black", :class => "axis #{@axis.type}-axis", :stroke_width => @axis.line_thickness}
         if vertical?
-          canvas.line(left + offset, top, left + offset, top + height, :stroke_colour => "black", :class => "axis", :stroke_width => @axis.line_thickness)
+          canvas.line(left + offset, top, left + offset, top + height, opts)
         else
-          canvas.line(left, top + offset, left + width, top + offset, :stroke_colour => "black", :class => "axis", :stroke_width => @axis.line_thickness)
+          canvas.line(left, top + offset, left + width, top + offset, opts)
         end
       end
     end

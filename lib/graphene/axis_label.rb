@@ -2,22 +2,24 @@ module Graphene
   class AxisLabel
     include Renderable
 
-    attr_accessor :name, :font_size
+    attr_accessor :name, :font_size, :axis
 
-    def initialize
+    def initialize(axis)
+      @axis = axis
       @font_size = 16
     end
 
-    def layout(position)
-      Renderer.new(self, position)
+    def layout(point_mapper, position = nil)
+      Renderer.new(self, point_mapper, position)
     end
 
     class Renderer
       include Positioned
 
-      def initialize(label, position)
+      def initialize(label, point_mapper, position)
         @label = label
-        @layout_position = position
+        @point_mapper = point_mapper
+        @layout_position = position || point_mapper.send("#{@label.axis.type}_axis_position")
       end
 
       def renderable_object

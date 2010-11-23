@@ -1,7 +1,9 @@
 require "graphene"
 
-chart = Graphene::Chart.new
+chart = Graphene::HorizontalChart.new; chart.x_axis.value_labels.padding_left = 50
+#chart = Graphene::Chart.new
 chart.name = "A title!"
+chart.width = 1024
 
 chart.legend.padding_left = 150
 chart.legend.padding_bottom = 12

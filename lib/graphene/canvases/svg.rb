@@ -22,9 +22,7 @@ module Graphene
       end
 
       def box(x, y, w, h, opts = {})
-        @builder.rect :x => x, :y => y, :width => w, :height => h,
-          :stroke => opts[:stroke_colour], :fill => opts[:fill_colour],
-          :class => opts[:class], :id => opts[:id]
+        @builder.rect opts.merge(:x => x, :y => y, :width => w, :height => h).reject {|k, v| v.nil?}
       end
 
       def text(x, y, text, opts = {})

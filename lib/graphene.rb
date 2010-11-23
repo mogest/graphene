@@ -21,12 +21,14 @@ require 'graphene/boxes'
 
 require 'graphene/axis'
 require 'graphene/axis_label'
-require 'graphene/chart'
 require 'graphene/grid'
 require 'graphene/legend'
 require 'graphene/text'
 require 'graphene/value_labels'
 require 'graphene/point_mapper'
+
+require 'graphene/chart'
+require 'graphene/horizontal_chart'
 
 require 'graphene/views'
 require 'graphene/canvases'

@@ -56,24 +56,33 @@ module Graphene
         raise LayoutError, "Cannot layout Chart before at least one plot/histogram/bar has been specified"
       end
 
-      x_position, y_position, y2_position, content_position = if true
-        [:bottom, :left, :right, :vertical]
-      else
-        [:left, :bottom, :top, :horizontal]
-      end
+      box = internal_layout(point_mapper)
+      box = Ybox.new(@legend.layout, box) if @legend
+      box = Ybox.new(@heading.layout, box) if @heading
+      box
+    end
 
+    def internal_layout(point_mapper)
+      box = layout_plot_area(point_mapper)
+      box = layout_value_labels(box, point_mapper)
+      layout_axis_labels(box, point_mapper)
+    end
+
+    def layout_plot_area(point_mapper)
       elements = [
-        @grid.layout(false),
-        @x_axis.layout(point_mapper, x_position),
-        @y_axis.layout(point_mapper, y_position)
+        @grid.layout(point_mapper),
+        @x_axis.layout(point_mapper),
+        @y_axis.layout(point_mapper)
       ]
 
-      elements << @y2_axis.layout(point_mapper, y2_position) if @y2_axis
+      elements << @y2_axis.layout(point_mapper) if @y2_axis
 
-      elements.concat(views.collect {|c| c.layout(point_mapper, content_position)})
+      elements.concat(views.collect {|c| c.layout(point_mapper)})
 
-      box = Zbox.new(*elements)
+      Zbox.new(*elements)
+    end
 
+    def layout_value_labels(box, point_mapper)
       if @x_axis.value_labels.formatter
         x_value_labels_layout = @x_axis.value_labels.layout(point_mapper, :bottom)
       end
@@ -82,24 +91,27 @@ module Graphene
         y_value_labels_layout = @y_axis.value_labels.layout(point_mapper, :left)
       end
 
-      box = GridBox.new(
+      GridBox.new(
           [y_value_labels_layout, box                  ],
           [nil,                   x_value_labels_layout])
+    end
 
-      box = Ybox.new(box, @x_axis.label.layout(:bottom))
-      box = Xbox.new(@y_axis.label.layout(:left), box)
-
-      box = Ybox.new(@legend.layout, box) if @legend
-      box = Ybox.new(@heading.layout, box) if @heading
+    def layout_axis_labels(box, point_mapper)
+      box = Ybox.new(box, @x_axis.label.layout(point_mapper))
+      box = Xbox.new(@y_axis.label.layout(point_mapper), box)
       box
     end
 
     def render_with_canvas(canvas)
-      point_mapper = PointMapper.new
+      point_mapper = PointMapper.new(*axis_positions)
       point_mapper.charts << self
 
       layout(point_mapper).render(canvas, 0, 0, @width, @height)
       canvas
+    end
+
+    def axis_positions
+      [:bottom, :left]
     end
 
     def to_svg

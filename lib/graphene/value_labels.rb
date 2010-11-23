@@ -51,7 +51,7 @@ module Graphene
           ticks.times do |tick|
             y = top + tick * tick_space
 
-            value = @point_mapper.y_point_to_value(y - top, height)
+            value = @point_mapper.point_to_value(@value_labels.axis.type, y - top, width, height)
             value = if formatter_proc
               formatter_proc.call(value)
             else
@@ -65,7 +65,7 @@ module Graphene
           ticks.times do |tick|
             x = left + tick * tick_space
 
-            value = @point_mapper.x_point_to_value(x - left, width)
+            value = @point_mapper.point_to_value(@value_labels.axis.type, x - left, width, height)
             value = if formatter_proc
               formatter_proc.call(value)
             else

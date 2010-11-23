@@ -17,15 +17,14 @@ module Graphene
         @stroke_opacity = @fill_opacity = value
       end
 
-      def layout(point_mapper, position)
-        Renderer.new(self, point_mapper, position)
+      def layout(point_mapper)
+        Renderer.new(self, point_mapper)
       end
 
       class Renderer
-        def initialize(line, point_mapper, position)
+        def initialize(line, point_mapper)
           @line = line
           @point_mapper = point_mapper
-          @position = position
         end
 
         def renderable_object
@@ -40,19 +39,27 @@ module Graphene
 
           instructions = []
           sorted.each_with_index do |(x_value, y_value), index|
-            x = left + @point_mapper.x_value_to_point(x_value, width)
-            y = top + @point_mapper.y_value_to_point(y_value, height)
+            left_offset, top_offset = @point_mapper.values_to_coordinates(x_value, y_value, width, height)
 
-            canvas.marker(x, y, @line.marker, :class => "marker")
+            left_offset += left
+            top_offset += top
 
-            instructions << [instructions.empty? ? :move : :lineto, x, y]
+            canvas.marker(left_offset, top_offset, @line.marker, :class => "marker")
+
+            instructions << [instructions.empty? ? :move : :lineto, left_offset, top_offset]
           end
 
           canvas.path(instructions, :stroke => @line.stroke_colour, :fill => "none", "stroke-opacity" => @line.stroke_opacity, "stroke-width" => @line.stroke_width)
 
           if @line.fill_colour
-            instructions << [:lineto, instructions.last[1], top + height]
-            instructions << [:lineto, instructions.first[1], top + height]
+            x_value, y_value = sorted.last
+            left_offset, top_offset = @point_mapper.values_to_coordinates(x_value, 0, width, height)
+            instructions << [:lineto, left + left_offset, top + top_offset]
+
+            x_value, y_value = sorted.first
+            left_offset, top_offset = @point_mapper.values_to_coordinates(x_value, 0, width, height)
+            instructions << [:lineto, left + left_offset, top + top_offset]
+
             canvas.path(instructions, :stroke => "none", :fill => @line.fill_colour, "fill-opacity" => @line.fill_opacity)
           end
         end

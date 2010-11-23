@@ -1,29 +1,85 @@
 module Graphene
   class PointMapper
-    attr_reader :charts
+    attr_reader :charts, :x_axis_position, :y_axis_position, :x_orientation, :y_orientation
 
-    def initialize
+    POSITIONS = [:left, :top, :right, :bottom]
+    ORIENTATION = {:left => :horizontal, :right => :horizontal, :top => :vertical, :bottom => :vertical}
+    OPPOSITES = {:left => :right, :right => :left, :top => :bottom, :bottom => :top}
+
+    def initialize(x_axis_position, y_axis_position)
+      raise ArgumentError, "invalid x axis position" unless POSITIONS.include?(x_axis_position)
+      raise ArgumentError, "invalid y axis position" unless POSITIONS.include?(y_axis_position)
+
+      @x_axis_position = x_axis_position
+      @y_axis_position = y_axis_position
+
+      @x_orientation = ORIENTATION[x_axis_position]
+      @y_orientation = ORIENTATION[y_axis_position]
+
+      @horizontal = @x_orientation == :horizontal
+
+      raise ArgumentError, "axes must intersect" if @x_orientation == @y_orientation
+
+      @invert_x = [:right, :bottom].include?(y_axis_position)
+      @invert_y = [:right, :bottom].include?(x_axis_position)
+
       @charts = []
     end
 
-    def x_value_to_point(x_value, width)
-      calculate
-      (x_value.to_f - @calculated_x_min.to_f) * width / @calculated_x_range
+    def horizontal?
+      @horizontal
     end
 
-    def x_point_to_value(x_point, width)
-      calculate
-      @calculated_x_min + x_point * @calculated_x_range / width
+    def y2_axis_position
+      OPPOSITES[y_axis_position]
     end
 
-    def y_value_to_point(y_value, height)
-      calculate
-      height - ((y_value - @calculated_y_min) * height / @calculated_y_range)
+    def y2_orientation
+      y_orientation
     end
 
-    def y_point_to_value(y_point, height)
+    def point_to_value(type, point, width, height)
+      method = {:x => :x_point_to_value, :y => :y_point_to_value}
+      send(method[type], point, width, height)
+    end
+
+    def value_to_point(type, value, width, height)
+      method = {:x => :x_value_to_point, :y => :y_value_to_point}
+      send(method[type], value, width, height)
+    end
+
+    def values_to_coordinates(x_value, y_value, width, height)
+      x_point = x_value_to_point(x_value, width, height)
+      y_point = y_value_to_point(y_value, width, height)
+      x_orientation == :horizontal ? [y_point, x_point] : [x_point, y_point]
+    end
+
+    def x_value_to_point(x_value, width, height)
+      length = @horizontal ? height : width
       calculate
-      @calculated_y_min + (height - y_point) * @calculated_y_range / height
+      point = (x_value.to_f - @calculated_x_min.to_f) * length / @calculated_x_range
+      @invert_x ? length - point : point
+    end
+
+    def x_point_to_value(x_point, width, height)
+      length = @horizontal ? height : width
+      calculate
+      x_point = length - x_point if @invert_x
+      @calculated_x_min + x_point * @calculated_x_range / length
+    end
+
+    def y_value_to_point(y_value, width, height)
+      length = @horizontal ? width : height
+      calculate
+      point = (y_value - @calculated_y_min) * length / @calculated_y_range
+      @invert_y ? length - point : point
+    end
+
+    def y_point_to_value(y_point, width, height)
+      length = @horizontal ? width : height
+      calculate
+      y_point = length - y_point if @invert_y
+      @calculated_y_min + y_point * @calculated_y_range / length
     end
 
     protected
