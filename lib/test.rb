@@ -1,7 +1,7 @@
 require "graphene"
 
-chart = Graphene::HorizontalChart.new; chart.x_axis.value_labels.padding_left = 50
-#chart = Graphene::Chart.new
+#chart = Graphene::HorizontalChart.new; chart.x_axis.value_labels.padding_left = 50
+chart = Graphene::Chart.new
 chart.name = "A title!"
 chart.width = 1024
 
@@ -18,7 +18,7 @@ chart.y_axis.grid_ticks = 11
 chart.y_axis.value_labels.formatter = "%0.1f"
 
 chart.plot [[Time.local(2010, 9, 1), 10.0],
-            [Time.local(2010, 10, 1), 12.3],
+            [Time.local(2010, 10, 1), -2.3],
             [Time.local(2010, 11, 1), 9.871]] do |plot|
   plot.name = "Apple Pie"
   plot.stroke_colour = "green"

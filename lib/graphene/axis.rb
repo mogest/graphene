@@ -87,10 +87,14 @@ module Graphene
       def preferred_height; nil; end
 
       def render(canvas, left, top, width, height)
-        offset = case @layout_position
-        when :bottom then height
-        when :right then width
-        else 0
+        if @axis.type == :x
+          offset = @point_mapper.value_to_point(:y, 0, width, height)
+        else
+          offset = case @layout_position
+          when :bottom then height
+          when :right then width
+          else 0
+          end
         end
 
         ticks = @axis.ticks
