@@ -19,7 +19,7 @@ module Graphene
       def initialize(label, point_mapper, position)
         @label = label
         @point_mapper = point_mapper
-        @layout_position = position || point_mapper.send("#{@label.axis.type}_axis_position")
+        @layout_position = position || point_mapper.axis_positions[@label.axis.type]
       end
 
       def renderable_object

@@ -1,6 +1,6 @@
 module Graphene
   class PointMapper
-    attr_reader :charts, :x_axis_position, :y_axis_position, :x_orientation, :y_orientation
+    attr_reader :charts, :axis_positions, :orientations
 
     POSITIONS = [:left, :top, :right, :bottom]
     ORIENTATION = {:left => :horizontal, :right => :horizontal, :top => :vertical, :bottom => :vertical}
@@ -10,18 +10,19 @@ module Graphene
       raise ArgumentError, "invalid x axis position" unless POSITIONS.include?(x_axis_position)
       raise ArgumentError, "invalid y axis position" unless POSITIONS.include?(y_axis_position)
 
-      @x_axis_position = x_axis_position
-      @y_axis_position = y_axis_position
+      @axis_positions = {:x => x_axis_position, :y => y_axis_position, :y2 => OPPOSITES[y_axis_position]}
+      @orientations   = {}
+      @axis_positions.each {|axis, position| @orientations[axis] = ORIENTATION[position]}
 
-      @x_orientation = ORIENTATION[x_axis_position]
-      @y_orientation = ORIENTATION[y_axis_position]
+      @horizontal = @orientations[:x] == :horizontal
 
-      @horizontal = @x_orientation == :horizontal
+      raise ArgumentError, "axes must intersect" if @orientations[:x] == @orientations[:y]
 
-      raise ArgumentError, "axes must intersect" if @x_orientation == @y_orientation
+      @invert = {
+        :x => [:right, :bottom].include?(y_axis_position),
+        :y => [:right, :bottom].include?(x_axis_position)}
 
-      @invert_x = [:right, :bottom].include?(y_axis_position)
-      @invert_y = [:right, :bottom].include?(x_axis_position)
+      @invert[:y2] = @invert[:y]
 
       @charts = []
     end
@@ -30,56 +31,32 @@ module Graphene
       @horizontal
     end
 
-    def y2_axis_position
-      OPPOSITES[y_axis_position]
-    end
-
-    def y2_orientation
-      y_orientation
-    end
-
     def point_to_value(type, point, width, height)
-      method = {:x => :x_point_to_value, :y => :y_point_to_value}
-      send(method[type], point, width, height)
+      calculate
+      length = @orientations[type] == :horizontal ? height : width
+      point = length - point if @invert[type]
+      @calculated_min[type] + point * @calculated_range[type] / length
     end
 
     def value_to_point(type, value, width, height)
-      method = {:x => :x_value_to_point, :y => :y_value_to_point}
-      send(method[type], value, width, height)
-    end
-
-    def values_to_coordinates(x_value, y_value, width, height)
-      x_point = x_value_to_point(x_value, width, height)
-      y_point = y_value_to_point(y_value, width, height)
-      x_orientation == :horizontal ? [y_point, x_point] : [x_point, y_point]
-    end
-
-    def x_value_to_point(x_value, width, height)
-      length = @horizontal ? height : width
       calculate
-      point = (x_value.to_f - @calculated_x_min.to_f) * length / @calculated_x_range
-      @invert_x ? length - point : point
+
+      if type == :x
+        value = value.to_f
+        min = @calculated_min[type].to_f
+      else
+        min = @calculated_min[type]
+      end
+
+      length = @orientations[type] == :horizontal ? height : width
+      point = (value - min) * length / @calculated_range[type]
+      @invert[type] ? length - point : point
     end
 
-    def x_point_to_value(x_point, width, height)
-      length = @horizontal ? height : width
-      calculate
-      x_point = length - x_point if @invert_x
-      @calculated_x_min + x_point * @calculated_x_range / length
-    end
-
-    def y_value_to_point(y_value, width, height)
-      length = @horizontal ? width : height
-      calculate
-      point = (y_value - @calculated_y_min) * length / @calculated_y_range
-      @invert_y ? length - point : point
-    end
-
-    def y_point_to_value(y_point, width, height)
-      length = @horizontal ? width : height
-      calculate
-      y_point = length - y_point if @invert_y
-      @calculated_y_min + y_point * @calculated_y_range / length
+    def values_to_coordinates(y_axis, x_value, y_value, width, height)
+      x_point = value_to_point(:x, x_value, width, height)
+      y_point = value_to_point(y_axis, y_value, width, height)
+      @orientations[:x] == :horizontal ? [y_point, x_point] : [x_point, y_point]
     end
 
     protected
@@ -87,13 +64,23 @@ module Graphene
       return if @calculated
       @calculated = true
 
-      @calculated_x_min = charts.collect {|chart| chart.x_axis.calculated_min}.compact.min
-      @calculated_x_max = charts.collect {|chart| chart.x_axis.calculated_max}.compact.max
-      @calculated_x_range = (@calculated_x_max) - (@calculated_x_min)
+      @calculated_min = {
+        :x => charts.collect {|chart| chart.x_axis.calculated_min}.compact.min,
+        :y => charts.collect {|chart| chart.y_axis.calculated_min}.compact.min}
 
-      @calculated_y_min = charts.collect {|chart| chart.y_axis.calculated_min}.compact.min
-      @calculated_y_max = charts.collect {|chart| chart.y_axis.calculated_max}.compact.max
-      @calculated_y_range = (@calculated_y_max || 0) - (@calculated_y_min || 0)
+      @calculated_max = {
+        :x => charts.collect {|chart| chart.x_axis.calculated_max}.compact.max,
+        :y => charts.collect {|chart| chart.y_axis.calculated_max}.compact.max}
+
+      if charts.any? {|chart| chart.y2_axis_presence}
+        @calculated_min[:y2] = charts.collect {|chart| chart.y2_axis.calculated_min}.compact.min
+        @calculated_max[:y2] = charts.collect {|chart| chart.y2_axis.calculated_max}.compact.max
+      end
+
+      @calculated_range = {}
+      @calculated_min.keys.each do |axis|
+        @calculated_range[axis] = @calculated_max[axis] - @calculated_min[axis]
+      end
     end
   end
 end

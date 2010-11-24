@@ -25,6 +25,10 @@ module Graphene
       @y2_axis ||= Axis.new(self, :y2)
     end
 
+    def y2_axis_presence
+      @y2_axis
+    end
+
     def legend
       @legend ||= Legend.new(self)
     end
@@ -91,15 +95,21 @@ module Graphene
         y_value_labels_layout = @y_axis.value_labels.layout(point_mapper, :left)
       end
 
+      if @y2_axis && @y2_axis.value_labels.formatter
+        y2_value_labels_layout = @y2_axis.value_labels.layout(point_mapper, :right)
+      end
+
       GridBox.new(
-          [y_value_labels_layout, box                  ],
-          [nil,                   x_value_labels_layout])
+          [y_value_labels_layout, box                  , y2_value_labels_layout],
+          [nil,                   x_value_labels_layout, nil                   ])
     end
 
     def layout_axis_labels(box, point_mapper)
       box = Ybox.new(box, @x_axis.label.layout(point_mapper))
-      box = Xbox.new(@y_axis.label.layout(point_mapper), box)
-      box
+      Xbox.new(
+        @y_axis.label.layout(point_mapper),
+        box,
+        @y2_axis && @y2_axis.label.layout(point_mapper))
     end
 
     def render_with_canvas(canvas)

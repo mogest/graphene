@@ -5,7 +5,7 @@ module Graphene
     attr_reader :components, :fixed_width, :fixed_height, :variable_width_count, :variable_height_count
 
     def initialize(*components)
-      @components = components
+      @components = components.compact
 
       @fixed_width = x_dimensions.inject(0) {|a, c| a + (c || 0)}
       @fixed_height = y_dimensions.inject(0) {|a, c| a + (c || 0)}

@@ -41,6 +41,8 @@ module Graphene
 
       watermark = nil
       chart.views.each do |view|
+        next if @type != :x && @type != view.axis
+
         view.dataset.each do |x, y|
           value = @type == :x ? x : y
           if watermark.nil? || value < watermark
@@ -56,6 +58,8 @@ module Graphene
 
       watermark = nil
       chart.views.each do |view|
+        next if @type != :x && @type != view.axis
+
         view.dataset.each do |x, y|
           value = @type == :x ? x : y
           if watermark.nil? || value > watermark
@@ -76,7 +80,7 @@ module Graphene
       def initialize(axis, point_mapper)
         @axis = axis
         @point_mapper = point_mapper
-        @layout_position = point_mapper.send("#{axis.type}_axis_position")
+        @layout_position = point_mapper.axis_positions[axis.type]
       end
 
       def renderable_object

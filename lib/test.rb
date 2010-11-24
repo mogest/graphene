@@ -1,7 +1,7 @@
 require "graphene"
 
-#chart = Graphene::HorizontalChart.new; chart.x_axis.value_labels.padding_left = 50
-chart = Graphene::Chart.new
+chart = Graphene::HorizontalChart.new; chart.x_axis.value_labels.padding_left = 50
+#chart = Graphene::Chart.new
 chart.name = "A title!"
 chart.width = 1024
 
@@ -16,6 +16,10 @@ chart.y_axis.name = "Awesomeness"
 chart.y_axis.ticks = 6
 chart.y_axis.grid_ticks = 11
 chart.y_axis.value_labels.formatter = "%0.1f"
+
+chart.y2_axis.name = "Temperature"
+chart.y2_axis.value_labels.formatter = "%0.2f"
+chart.y2_axis.ticks = 11
 
 chart.plot [[Time.local(2010, 9, 1), 10.0],
             [Time.local(2010, 10, 1), -2.3],
@@ -34,6 +38,15 @@ chart.plot [[Time.local(2010, 9, 1), 0],
   plot.marker = "O"
   plot.fill_colour = "#ff7777"
   plot.fill_opacity = 0.5
+end
+
+chart.plot [[Time.local(2010, 9, 1), 18],
+            [Time.local(2010, 10, 1), 19],
+            [Time.local(2010, 11, 1), 21]] do |plot|
+  plot.axis = :y2
+  plot.name = "Temperature"
+  plot.stroke_colour = "blue"
+  plot.stroke_width = 2
 end
 
 output = chart.render_with_canvas(Graphene::Canvases::Debug.new(chart))

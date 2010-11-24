@@ -3,6 +3,7 @@ module Graphene
     class Line < Base
       attr_accessor :stroke_colour, :stroke_opacity, :fill_colour, :fill_opacity, :name, :marker
       attr_accessor :stroke_width
+      attr_reader :axis
 
       def initialize(dataset)
         @dataset = dataset
@@ -11,6 +12,12 @@ module Graphene
         @marker = "x"
         @stroke_opacity = @fill_opacity = 1
         @stroke_width = 2
+        @axis = :y
+      end
+
+      def axis=(value)
+        raise ArgumentError, "axis must be either :y or :y2" unless [:y, :y2].include?(value)
+        @axis = value
       end
 
       def opacity=(value)
@@ -39,7 +46,7 @@ module Graphene
 
           instructions = []
           sorted.each_with_index do |(x_value, y_value), index|
-            left_offset, top_offset = @point_mapper.values_to_coordinates(x_value, y_value, width, height)
+            left_offset, top_offset = @point_mapper.values_to_coordinates(@line.axis, x_value, y_value, width, height)
 
             left_offset += left
             top_offset += top
@@ -53,11 +60,11 @@ module Graphene
 
           if @line.fill_colour
             x_value, y_value = sorted.last
-            left_offset, top_offset = @point_mapper.values_to_coordinates(x_value, 0, width, height)
+            left_offset, top_offset = @point_mapper.values_to_coordinates(@line.axis, x_value, 0, width, height)
             instructions << [:lineto, left + left_offset, top + top_offset]
 
             x_value, y_value = sorted.first
-            left_offset, top_offset = @point_mapper.values_to_coordinates(x_value, 0, width, height)
+            left_offset, top_offset = @point_mapper.values_to_coordinates(@line.axis, x_value, 0, width, height)
             instructions << [:lineto, left + left_offset, top + top_offset]
 
             canvas.path(instructions, :stroke => "none", :fill => @line.fill_colour, "fill-opacity" => @line.fill_opacity)

@@ -60,7 +60,7 @@ module Graphene
             end
 
             anchor = @layout_position == :left ? "end" : nil
-            left_offset = anchor == "end" ? width - 5 : 0
+            left_offset = anchor == "end" ? width - 5 : 5
 
             canvas.text(left + left_offset, y, value, :text_anchor => anchor, :alignment_baseline => "middle", :font_size => @value_labels.font_size)
           end
