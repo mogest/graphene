@@ -1,8 +1,8 @@
 require "graphene"
 
-chart = Graphene::HorizontalChart.new; chart.x_axis.value_labels.padding_left = 50
-#chart = Graphene::Chart.new
-chart.name = "A title!"
+#chart = Graphene::HorizontalChart.new; chart.x_axis.value_labels.padding_left = 50
+chart = Graphene::Chart.new
+chart.name = "Graphene Feature Test"
 chart.width = 1024
 
 chart.legend.padding_left = 150
@@ -16,6 +16,8 @@ chart.y_axis.name = "Awesomeness"
 chart.y_axis.ticks = 6
 chart.y_axis.grid_ticks = 11
 chart.y_axis.value_labels.formatter = "%0.1f"
+#chart.y_axis.min = -10
+#chart.y_axis.max = 20
 
 chart.y2_axis.name = "Temperature"
 chart.y2_axis.value_labels.formatter = "%0.2f"
@@ -49,8 +51,12 @@ chart.plot [[Time.local(2010, 9, 1), 18],
   plot.stroke_width = 2
 end
 
-output = chart.render_with_canvas(Graphene::Canvases::Debug.new(chart))
-puts output.output
+chart.histogram [10, -3, 15, 18, 9], Time.local(2010, 9, 1), 14 * 86400,
+  :name => "Cheese demand",
+  :fill_opacity => 0.2
+
+#output = chart.render_with_canvas(Graphene::Canvases::Debug.new(chart))
+#puts output.output
 
 svg = chart.to_svg
 puts svg

@@ -1,23 +1,24 @@
 module Graphene
   module Views
     class Line < Base
-      attr_accessor :stroke_colour, :stroke_opacity, :fill_colour, :fill_opacity, :name, :marker
+      attr_accessor :stroke_colour, :stroke_opacity, :fill_colour, :fill_opacity, :marker
       attr_accessor :stroke_width
-      attr_reader :axis
 
       def initialize(dataset)
+        super()
         @dataset = dataset
         @stroke_colour = "red"
-        @name = "Dataset"
         @marker = "x"
         @stroke_opacity = @fill_opacity = 1
         @stroke_width = 2
-        @axis = :y
       end
 
-      def axis=(value)
-        raise ArgumentError, "axis must be either :y or :y2" unless [:y, :y2].include?(value)
-        @axis = value
+      def push_watermark(watermark, type, comparitor)
+        dataset.each do |x, y|
+          value = type == :x ? x : y
+          watermark = value if watermark.nil? || value.send(comparitor, watermark)
+        end
+        watermark
       end
 
       def opacity=(value)
@@ -45,14 +46,15 @@ module Graphene
           sorted = @line.dataset.to_a.sort_by(&:first)
 
           instructions = []
+          markers = []
+
           sorted.each_with_index do |(x_value, y_value), index|
             left_offset, top_offset = @point_mapper.values_to_coordinates(@line.axis, x_value, y_value, width, height)
 
             left_offset += left
             top_offset += top
 
-            canvas.marker(left_offset, top_offset, @line.marker, :class => "marker")
-
+            markers << [left_offset, top_offset, @line.marker, {:class => "marker"}]
             instructions << [instructions.empty? ? :move : :lineto, left_offset, top_offset]
           end
 
@@ -68,6 +70,10 @@ module Graphene
             instructions << [:lineto, left + left_offset, top + top_offset]
 
             canvas.path(instructions, :stroke => "none", :fill => @line.fill_colour, "fill-opacity" => @line.fill_opacity)
+          end
+
+          markers.each do |args|
+            canvas.marker(*args)
           end
         end
       end

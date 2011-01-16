@@ -41,10 +41,11 @@ module Graphene
       end
     end
 
-    def histogram(dataset, step, options = {})
-      Views::Histogram.new(dataset, step).tap do |histogram|
-        options.each {|k, v| histogram.send(k, v)}
+    def histogram(dataset, start, step, options = {})
+      Views::Histogram.new(dataset, start, step).tap do |histogram|
+        options.each {|k, v| histogram.send("#{k}=", v)}
         @views << histogram
+        yield histogram if block_given?
       end
     end
 

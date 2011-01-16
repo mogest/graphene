@@ -42,13 +42,7 @@ module Graphene
       watermark = nil
       chart.views.each do |view|
         next if @type != :x && @type != view.axis
-
-        view.dataset.each do |x, y|
-          value = @type == :x ? x : y
-          if watermark.nil? || value < watermark
-            watermark = value
-          end
-        end
+        watermark = view.push_watermark(watermark, @type, :<)
       end
       watermark
     end
@@ -59,13 +53,7 @@ module Graphene
       watermark = nil
       chart.views.each do |view|
         next if @type != :x && @type != view.axis
-
-        view.dataset.each do |x, y|
-          value = @type == :x ? x : y
-          if watermark.nil? || value > watermark
-            watermark = value
-          end
-        end
+        watermark = view.push_watermark(watermark, @type, :>)
       end
       watermark
     end

@@ -31,7 +31,8 @@ module Graphene
           :class => opts[:class], :id => opts[:id], "text-anchor" => opts[:text_anchor],
           "font-size" => opts[:font_size] && "#{opts[:font_size]}px",
           "alignment-baseline" => opts[:alignment_baseline],
-          :fill => opts[:fill_colour]
+          :fill => opts[:fill_colour],
+          :transform => opts[:transform]
         }.reject {|k, v| v.nil?}
       end
 
