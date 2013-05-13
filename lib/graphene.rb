@@ -7,13 +7,13 @@ module Graphene
     yield chart
     chart.to_svg
   end
-  
+
   def self.chart
     chart = Graphene::Chart.new
     yield chart if block_given?
     chart
   end
-  
+
   def self.vertical_stack
     stack = Graphene::VerticalStack.new
     yield stack if block_given?
@@ -21,9 +21,6 @@ module Graphene
   end
 end
 
-require 'rubygems'
-
-gem 'builder'
 require 'builder'
 require 'bigdecimal'
 
