@@ -1,0 +1,10 @@
+Basic Usage
+===========
+
+fibonacci_sequence = (0..10).inject([0,1]){|seq, index| seq << seq[-2] + seq[-1]; seq}
+data = fibonacci_sequence.each_with_index.to_a    # data can be a array of two-value arrays, [[0, 0], [1, 1], [1, 2], [2, 3], [3, 4]]
+
+chart = Graphene::Chart.new
+chart.plot(data)                                  # plot, histogram, or bar
+
+chart.to_svg
