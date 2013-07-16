@@ -33,7 +33,9 @@ module Graphene
     end
 
     def render(canvas)
-      canvas.style(to_css)
+      canvas.definitions do
+        canvas.style(to_css)
+      end
     end
   end
 

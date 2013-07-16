@@ -27,7 +27,9 @@ module Graphene
       end
 
       def style(css)
-        @builder.style css
+        @builder.style('type' => 'text/css') do
+          @builder.cdata! css
+        end
       end
 
       def gradient(id, from_color, to_color)
