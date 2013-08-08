@@ -2,11 +2,12 @@ module Graphene
   class AxisLabel
     include Renderable
 
-    attr_accessor :name, :font_size, :axis, :align_with_axis, :rotation
+    attr_accessor :name, :font_size, :axis, :align_with_axis, :rotation, :font_weight
 
     def initialize(axis)
       @axis = axis
       @font_size = 16
+      @font_weight = 'normal'
       @align_with_axis = true
     end
 
@@ -38,37 +39,36 @@ module Graphene
       end
 
       def estimated_length(multiplier)
-        @label.font_size * [multiplier * @label.name.to_s.length / 1.7, 1].max
+        @label.font_size * [multiplier * @label.name.to_s.length / 1.7, 1.2].max
       end
 
       def render(canvas, left, top, width, height)
         return unless @label.name
-        canvas.box(left, top, width, height, :fill => "#000000", "fill-opacity" => 0.2, :stroke => "red")
+        # canvas.box(left, top, width, height, :fill => "#000000", "fill-opacity" => 0.2, :stroke => "red")
 
-        opts = {:class => "axis-label", :font_size => @label.font_size}
+        opts = {:class => "axis-label", :font_size => @label.font_size, :font_weight => @label.font_weight}
 
-        if false&& vertical?
-          top += (height - @label.font_size) / 2
-        else
-#          left += width / 2
-#          opts[:text_anchor] = "middle"
+        case @layout_position
+        when :bottom
+          left += width/2
+          top  += height/1.2
+          
+        when :top
+          left += width/2
+          
+        when :left
+          left += @label.font_size
+          top  += height/2
+          
+        when :right
+          left += @label.font_size
+          top  += height/2
         end
-#        top += height / 2
 
-        if false&& @layout_position == :left
-          opts[:text_anchor] = "end"
-          # Insert a small bit of padding here so it's not hard up against
-          # the Y axis.
-          left += width - @label.font_size / 2
-        end
-
-        top += height/2
-        left += @label.font_size
-
-        puts "rotation = #{@rotation}"
-        canvas.box(left-2,top-2,4,4,:fill => "blue")
-#        opts[:transform] = "rotate(#{@rotation} #{left} #{top})" unless @rotation == 0
-
+        # canvas.box(left-2,top-2,4,4,:fill => "blue")
+        opts[:transform] = "rotate(#{@rotation} #{left} #{top})" unless @rotation == 0
+        opts[:text_anchor] = "middle"
+        
         canvas.text(left, top, @label.name, opts)
       end
     end

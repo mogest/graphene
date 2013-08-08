@@ -1,6 +1,7 @@
 module Graphene
   class PointMapper
     attr_reader :charts, :axis_positions, :orientations
+    attr_accessor :x_axis_offset_in_units
 
     POSITIONS = [:left, :top, :right, :bottom]
     ORIENTATION = {:left => :horizontal, :right => :horizontal, :top => :vertical, :bottom => :vertical}
@@ -39,13 +40,17 @@ module Graphene
     end
 
     def value_to_point(type, value, width, height)
+      return unless value
+
       calculate
 
+      min = @calculated_min[type]
       if type == :x
-        value = value.to_f
-        min = @calculated_min[type].to_f
-      else
-        min = @calculated_min[type]
+        if value.respond_to?(:to_f)
+          value = value.to_f
+          min = min.to_f
+        end
+        min -= x_axis_offset_in_units
       end
 
       length = @orientations[type] == :horizontal ? height : width

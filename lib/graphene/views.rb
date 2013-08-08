@@ -4,6 +4,7 @@ module Graphene
 end
 
 require 'graphene/views/base'
+require 'graphene/views/area'
 require 'graphene/views/bar'
 require 'graphene/views/histogram'
 require 'graphene/views/line'
