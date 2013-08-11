@@ -2,12 +2,23 @@ module Graphene
   class ValueLabels
     include Renderable
 
-    attr_accessor :layout_position, :formatter, :font_size
+    attr_accessor :layout_position, :formatter, :font_size, :color, :text_anchor, :font_weight, :horizontal_offset, :vertical_offset
     attr_reader :axis
+    
+    attr_accessor :preferred_width
+
+    alias :colour  :color
+    alias :colour= :color=
 
     def initialize(axis)
       @axis = axis
       @font_size = 14
+      @font_weight = 'normal'
+      @color = "000000"
+      @preferred_width = nil
+      @text_anchor = 'middle'
+      @horizontal_offset = 0     # -ve to offset right and +ve to offset left
+      @vertical_offset    = 0    # -ve to offset up and +ve to offset down
     end
 
     def layout(point_mapper, position)
@@ -28,11 +39,15 @@ module Graphene
       end
 
       def preferred_width
-        40 if vertical?
+        (@value_labels.preferred_width ? @value_labels.preferred_width :  @value_labels.font_size * formatted_value(@value_labels.axis.calculated_max).to_s.length) if vertical?
       end
 
       def preferred_height
-        @value_labels.font_size * 1.5 if horizontal?
+        @value_labels.font_size if horizontal?
+      end
+      
+      def text_anchor
+        @value_labels.text_anchor
       end
 
       def render(canvas, left, top, width, height)
@@ -44,42 +59,41 @@ module Graphene
           formatter_string = @value_labels.formatter
         end
 
-        ticks = @value_labels.axis.ticks
-        return unless ticks && ticks > 1
-
-        if vertical?
-          tick_space = height / BigDecimal.new((ticks - 1).to_s)
-          ticks.times do |tick|
-            y = top + tick * tick_space
-
-            value = @point_mapper.point_to_value(@value_labels.axis.type, y - top, width, height)
-            value = if formatter_proc
-              formatter_proc.call(value)
-            else
-              formatter_string % value
-            end
-
-            anchor = @layout_position == :left ? "end" : nil
-            left_offset = anchor == "end" ? width - 5 : 5
-
-            canvas.text(left + left_offset, y, value, :text_anchor => anchor, :alignment_baseline => "middle", :font_size => @value_labels.font_size)
+        @value_labels.axis.enum_ticks do |value|
+          formatted = if formatter_proc
+            x = formatter_proc.call(value)
+            x && x.to_s
+          else
+            formatter_string % value
           end
+
+          if formatted && !formatted.empty?
+            position = @point_mapper.value_to_point(@value_labels.axis.type, value, width, height)
+
+            if vertical?
+              anchor = @layout_position == :left ? "end" : nil
+              left_offset = anchor == "end" ? width - 5 : 5
+              left_offset += @value_labels.horizontal_offset
+
+              canvas.text(left + left_offset, top + position + @value_labels.vertical_offset, formatted, :text_anchor => anchor, :alignment_baseline => text_anchor, :font_size => @value_labels.font_size, :fill_colour => @value_labels.color)
+            else
+              top_offset = true ? @value_labels.font_size : 0
+              top_offset += @value_labels.vertical_offset
+
+              formatted.split("\n").each_with_index do |term, index|
+                canvas.text(left + position + @value_labels.horizontal_offset, top + top_offset + preferred_height * index, term, :text_anchor => text_anchor, :font_size => @value_labels.font_size, :font_weight => @value_labels.font_weight, :fill_colour => @value_labels.color)
+              end
+            end
+          end
+        end
+      end
+
+      private
+      def formatted_value(value)
+        if @value_labels.formatter.respond_to?(:call)
+          @value_labels.formatter.call(value)
         else
-          tick_space = width / BigDecimal.new((ticks - 1).to_s)
-          ticks.times do |tick|
-            x = left + tick * tick_space
-
-            value = @point_mapper.point_to_value(@value_labels.axis.type, x - left, width, height)
-            value = if formatter_proc
-              formatter_proc.call(value)
-            else
-              formatter_string % value
-            end
-
-            top_offset = true ? @value_labels.font_size : 0
-
-            canvas.text(x, top + top_offset, value, :text_anchor => "middle", :font_size => @value_labels.font_size)
-          end
+          @value_labels.formatter % value
         end
       end
     end

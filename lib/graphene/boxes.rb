@@ -158,4 +158,37 @@ module Graphene
       end
     end
   end
+
+  class PaddedBox
+    include Renderable
+
+    attr_reader :component, :fixed_width, :fixed_height, :variable_width_count, :variable_height_count
+
+    def initialize(component, padding_left, padding_top, padding_right, padding_bottom)
+      @component = component
+      @internal_padding_left = padding_left || 0
+      @internal_padding_top = padding_top || 0
+      @internal_padding_right = padding_right || 0
+      @internal_padding_bottom = padding_bottom || 0
+    end
+
+    def preferred_width
+      width = component.preferred_width
+      width && width + component.padding_width + @internal_padding_left + @internal_padding_right
+    end
+
+    def preferred_height
+      height = component.preferred_height
+      height && height + component.padding_height + @internal_padding_top + @internal_padding_bottom
+    end
+
+    def render(canvas, left, top, width, height)
+      component.render(
+        canvas,
+        left + component.renderable_object.padding_left + @internal_padding_left,
+        top + component.renderable_object.padding_top + @internal_padding_top,
+        component.preferred_width || (width - component.renderable_object.padding_width - @internal_padding_left - @internal_padding_right),
+        component.preferred_height || (height - component.renderable_object.padding_height - @internal_padding_top - @internal_padding_bottom))
+    end
+  end
 end

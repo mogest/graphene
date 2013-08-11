@@ -4,6 +4,11 @@ module Graphene
 
     attr_accessor :colour, :opacity, :thickness, :fill_colour, :fill_opacity
 
+    alias :color       :colour
+    alias :color=      :colour=
+    alias :fill_color  :fill_colour
+    alias :fill_color= :fill_colour=
+
     def initialize(chart)
       @chart = chart
       @colour = "#dddddd"
@@ -34,14 +39,14 @@ module Graphene
       [[:x, x_ticks], [:y, y_ticks]].select {|a,b| b && b > 0}.each do |axis, ticks|
         if (axis == :x) == @point_mapper.horizontal?
           dy = height / BigDecimal.new((ticks - 1).to_s)
-          ticks.times do |cy|
-            y = top + cy * dy
+          ticks.floor.times do |cy|
+            y = top + height - cy * dy # need to go + height - offset because drawing y coordinates go down but graph coords go up, and we might not have an exact number of ticks in the height
             instructions << [:move, left, y]
             instructions << [:lineto, left + width, y]
           end
         else
           dx = width / BigDecimal.new((ticks - 1).to_s)
-          ticks.times do |cx|
+          ticks.floor.times do |cx|
             x = left + cx * dx
             instructions << [:move, x, top]
             instructions << [:lineto, x, top + height]
